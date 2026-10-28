@@ -1,7 +1,5 @@
 ﻿using StudentCourseManagement.Models;
-using StudentCourseManagement.Repository;
-using StudentManagementSystem.Models;
-
+using StudentCourseManagement.Repositories;
 
 namespace StudentCourseManagement.Services;
 
@@ -14,7 +12,7 @@ public class StudentService
         _repository = repository;
     }
 
-    public async Task AddStudentAsync(Student student)
+    public Task<int> RegisterAsync(Student student)
     {
         if (string.IsNullOrWhiteSpace(student.Name))
             throw new ArgumentException("Student name is required.");
@@ -22,22 +20,14 @@ public class StudentService
         if (string.IsNullOrWhiteSpace(student.Email))
             throw new ArgumentException("Student email is required.");
 
-        if (student.Age < 17 || student.Age > 60)
-            throw new ArgumentException("Age must be between 17 and 60.");
+        if (student.Age is < 17 or > 60)
+            throw new ArgumentOutOfRangeException(
+                nameof(student.Age), "Age must be between 17 and 60.");
 
-        await _repository.AddStudentAsync(student);
-    }
+        if (student.DepartmentId <= 0)
+            throw new ArgumentOutOfRangeException(
+                nameof(student.DepartmentId), "Select a valid department.");
 
-    public Task<List<Student>> GetAllStudentsAsync()
-    {
-        return _repository.GetAllStudentsAsync();
-    }
-
-    public async Task<Student?> GetStudentByIdAsync(int id)
-    {
-        if (id <= 0)
-            throw new ArgumentException("Student ID must be greater than zero.");
-
-        return await _repository.GetStudentByIdAsync(id);
+        return _repository.AddAsync(student);
     }
 }
